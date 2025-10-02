@@ -1,44 +1,32 @@
-// server.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
+import inquiriesRouter from "./routes/inquiryRoutes.js"; // make sure path is correct
 
-// Load environment variables from .env
 dotenv.config();
-
 const app = express();
 
-// ===== Middleware =====
+// Middleware
 app.use(cors({
   origin: "*" // For development, allow all origins; later replace with your frontend URL
 }));
-app.use(express.json()); // To parse JSON requests
+app.use(express.json());
 
-// ===== MongoDB connection =====
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("MongoDB connected"))
-.catch((err) => console.log("MongoDB connection error:", err));
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.log("MongoDB connection error:", err));
 
-// ===== Routes =====
-app.post("/api/inquiries", async (req, res) => {
-  try {
-    const inquiry = req.body;
-    console.log("Received inquiry:", inquiry);
+// Use the router
+app.use("/api/inquiries", inquiriesRouter);
 
-    // Here you can save to DB
-    // Example: await Inquiry.create(inquiry);
+// Root route
+app.get("/", (req, res) => res.send("Backend is running"));
 
-    res.status(200).json({ message: "Quote request received!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
+// Catch-all 404
+app.all(/.*/, (req, res) => res.status(404).send("Route not found"));
 
-// ===== Start server =====
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
